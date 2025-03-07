@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MH370 Route Simulation</title>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASi6arySId49JVq8LpiiAK3gplrJNXe8E" defer></script>
-    <style>
+ <style>
         body {
             display: flex;
             flex-direction: column;
@@ -65,7 +65,7 @@
         function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
                 center: { lat: 3.139, lng: 101.6869 }, // Centered around Malaysia initially
-                zoom: 6,
+                zoom: 7,
             });
             
             actualPathTrail = new google.maps.Polyline({
@@ -85,6 +85,28 @@
                     url: "https://maps.google.com/mapfiles/kml/shapes/airplane.png",
                     scaledSize: new google.maps.Size(40, 40)
                 }
+            });
+            
+            // ATC Towers
+            new google.maps.Marker({
+                position: { lat: 2.745, lng: 101.709 },
+                map: map,
+                title: "Malaysia ATC",
+                icon: "https://maps.google.com/mapfiles/kml/shapes/ranger_station.png"
+            });
+            new google.maps.Marker({
+                position: { lat: 11.546, lng: 104.844 },
+                map: map,
+                title: "Cambodia ATC",
+                icon: "https://maps.google.com/mapfiles/kml/shapes/ranger_station.png"
+            });
+            
+            // Military Radar
+            new google.maps.Marker({
+                position: { lat: 5.527, lng: 98.489 },
+                map: map,
+                title: "Military Radar Contact",
+                icon: "https://maps.google.com/mapfiles/kml/shapes/target.png"
             });
         }
         
@@ -107,7 +129,8 @@
                     map.setZoom(5); // Zoom out halfway for better visibility
                 }
                 if (index === path.length - 1) {
-                    map.setZoom(4); // Final zoom out when reaching last point
+                    map.setZoom(7); // Recenter to Malaysia at the end
+                    map.panTo({ lat: 3.139, lng: 101.6869 });
                 }
                 
                 let timelineEntry = document.getElementById("timeline-entry-" + index);
