@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MH370 Route Simulation</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASi6arySId49JVq8LpiiAK3gplrJNXe8E" defer></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        #controls {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        #timeline {
+            width: 30%;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 10px;
+            border-right: 2px solid #ddd;
+            background: #f9f9f9;
+        }
+        #map {
+            width: 70%;
+            height: 100vh;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button onclick="startActualPath()">Actual Flight Path</button>
+    </div>
+    <div style="display: flex;">
+        <div id="timeline"></div>
+        <div id="map"></div>
+    </div>
+    
+    <script>
+        let map;
+        let planeMarker;
+        let index = 0;
+        let actualPathTrail;
+        const timelineDiv = document.getElementById("timeline");
+        
+        const actualFlightPath = [
+            { lat: 2.7466, lng: 101.7099, time: "00:42 - Departure KLIA", altitude: 0, speed: 0, comms: "MH370 cleared for takeoff." },
+            { lat: 6.955, lng: 103.583, time: "01:19 - IGARI (Last ATC Contact)", altitude: 35000, speed: 900, comms: "MH370 good night." },
+            { lat: 5.527, lng: 98.489, time: "02:22 - VAMPI (Military Radar Contact)", altitude: 36000, speed: 880, comms: "ATC lost contact. Radar shows deviation." },
+            { lat: 3.423, lng: 96.787, time: "03:00 - MEKAR (Electrical System Restart)", altitude: 29500, speed: 800, comms: "Radar shows aircraft turning south." },
+            { lat: 1.333, lng: 93.978, time: "08:19 - NILAM (Final Satellite Ping, Oxygen Mask Deployment)", altitude: 20000, speed: 750, comms: "Inmarsat satellite confirms last ping." },
+            { lat: -39.0, lng: 88.0, time: "08:30 - Inmarsat Satellite Arc, Co-Pilot Mobile Contact Detected", altitude: 10000, speed: 500, comms: "Last mobile contact detected." }
+        ];
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 3.139, lng: 101.6869 }, // Centered around Malaysia initially
+                zoom: 6,
+            });
+            
+            actualPathTrail = new google.maps.Polyline({
+                path: [],
+                geodesic: true,
+                strokeColor: "#FF0000",
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+                map: map
+            });
+            
+            planeMarker = new google.maps.Marker({
+                position: actualFlightPath[0],
+                map: map,
+                title: "MH370",
+                icon: {
+                    url: "https://maps.google.com/mapfiles/kml/shapes/airplane.png",
+                    scaledSize: new google.maps.Size(40, 40)
+                }
+            });
+        }
+        
+        function startActualPath() {
+            index = 0;
+            actualPathTrail.setPath([]);
+            updateTimeline(actualFlightPath);
+            animateFlight(actualFlightPath, 2000);
+        }
+        
+        function animateFlight(path, speed = 2000) {
+            if (index < path.length) {
+                let point = path[index];
+                planeMarker.setPosition({ lat: point.lat, lng: point.lng });
+                let trailPath = actualPathTrail.getPath();
+                trailPath.push(new google.maps.LatLng(point.lat, point.lng));
+                
+                map.panTo({ lat: point.lat, lng: point.lng });
+                if (index === Math.floor(path.length / 2)) {
+                    map.setZoom(5); // Zoom out halfway for better visibility
+                }
+                if (index === path.length - 1) {
+                    map.setZoom(4); // Final zoom out when reaching last point
+                }
+                
+                let timelineEntry = document.getElementById("timeline-entry-" + index);
+                if (timelineEntry) {
+                    timelineEntry.style.backgroundColor = "yellow";
+                    timelineEntry.scrollIntoView({ behavior: "smooth" });
+                }
+                
+                index++;
+                setTimeout(() => animateFlight(path, speed), speed);
+            }
+        }
+        
+        function updateTimeline(path) {
+            timelineDiv.innerHTML = "";
+            path.forEach((point, i) => {
+                let entry = document.createElement("div");
+                entry.innerHTML = `<strong>${point.time}</strong> | Alt: ${point.altitude} ft | Speed: ${point.speed} km/h ${point.comms ? `<br><em>Comm: ${point.comms}</em>` : ''}`;
+                entry.style.padding = "10px";
+                entry.style.borderBottom = "1px solid #ddd";
+                entry.id = "timeline-entry-" + i;
+                timelineDiv.appendChild(entry);
+            });
+        }
+        
+        window.onload = initMap;
+    </script>
+</body>
+</html>
